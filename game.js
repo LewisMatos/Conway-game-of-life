@@ -1,17 +1,21 @@
 class GOF {
-  constructor(canvas, col = 900, row = 900, fps = 30, cellSize = 10) {
+  constructor(canvas, col = 900, row = 900, fps = 20, population = 100) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.canvas.style.width = `${col}px`;
-    this.canvas.style.height = `${row}px`;
+    this.canvas.width = col;
+    this.canvas.height = row;
     this.width = col;
     this.heght = row;
     this.FPS = fps;
-    this.CELLSIZE = cellSize;
+    this.POPULATION = population;
+    this.CELLSIZE = col / population;
+    this.board = [];
+    this.boardClone = [];
   }
 
   init() {
     this.board = this.createBoard();
+    this.boardClone = this.createBoard();
   }
 
   update() {
@@ -22,35 +26,27 @@ class GOF {
     this.drawCells();
   }
 
-  drawBackground() {
-    this.ctx.fillStyle = 'green';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
   drawCells() {
-    let cellSize = this.CELLSIZE;
     this.board.map((array, col) => {
       array.forEach((cell, row) => {
-        if (cell === 1) {
-          this.createCell(col * cellSize, row * cellSize, 'red');
-        } else {
-          this.createCell(col * cellSize, row * cellSize, 'white');
-        }
+        let paint = cell === 1 ? '#E71D36' : 'white';
+        this.createCell(col * this.CELLSIZE, row * this.CELLSIZE, paint);
       });
     });
   }
 
   createCell(x, y, fillStyle) {
+    this.ctx.beginPath();
     this.ctx.fillStyle = fillStyle;
-    this.ctx.fillRect(x, y, this.CELLSIZE, this.CELLSIZE);
-    this.ctx.strokeStyle = 'black';
-    this.ctx.strokeRect(x, y, this.CELLSIZE, this.CELLSIZE);
+    this.ctx.rect(x, y, this.canvas.width, this.canvas.height);
+    this.ctx.fill();
+    this.ctx.stroke();
   }
 
   createBoard(cols, rows) {
     //2D array for board
-    let boardArray = new Array(this.width).fill(null).map(array => {
-      return new Array(this.heght).fill(null);
+    let boardArray = new Array(this.POPULATION).fill(null).map(array => {
+      return new Array(this.POPULATION).fill(null);
     });
 
     //Create rand 0 || 1 in each cell
@@ -71,67 +67,28 @@ class GOF {
 
   */
   computeNextGeneration() {
-    let boardClone = this.copyArray(this.board);
+    // let boardClone = this.copyArray(this.board);
     let board = this.board;
     let neighbors = 0;
 
     for (let col = 1; col < board.length - 1; col++) {
       for (let row = 1; row < board[col].length - 1; row++) {
-        switch (board) {
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          case board[col - 1][row - 1] === 1:
-            neighbors++;
-            break;
-          default:
-            break;
-        }
+        if (board[col - 1][row - 1] === 1) neighbors++;
+        if (board[col][row - 1] === 1) neighbors++;
+        if (board[col + 1][row - 1] === 1) neighbors++;
+        if (board[col - 1][row] === 1) neighbors++;
+        if (board[col + 1][row] === 1) neighbors++;
+        if (board[col - 1][row + 1] === 1) neighbors++;
+        if (board[col][row + 1] === 1) neighbors++;
+        if (board[col + 1][row + 1] === 1) neighbors++;
 
-        if (board[col - 1][row - 1] === 1) {
-          neighbors++;
-        }
-        if (board[col][row - 1] === 1) {
-          neighbors++;
-        }
-        if (board[col + 1][row - 1] === 1) {
-          neighbors++;
-        }
-
-        if (board[col - 1][row] === 1) {
-          neighbors++;
-        }
-        if (board[col + 1][row] === 1) {
-          neighbors++;
-        }
-
-        if (board[col - 1][row + 1] === 1) {
-          neighbors++;
-        }
-        if (board[col][row + 1] === 1) {
-          neighbors++;
-        }
-        if (board[col + 1][row + 1] === 1) {
-          neighbors++;
-        }
-
-        boardClone[col][row] = this.rules(board[col][row], neighbors);
+        this.boardClone[col][row] = this.rules(board[col][row], neighbors);
         neighbors = 0;
       }
     }
-    this.board = this.copyArray(boardClone);
+    let temp = this.board;
+    this.board = this.boardClone;
+    this.boardClone = temp;
   }
 
   rules(cellPos, neighbors) {
@@ -147,13 +104,9 @@ class GOF {
   }
 
   copyArray(originalArray) {
-    let cloneArray = this.createBoard();
-    originalArray.forEach((array, col) => {
-      array.forEach((cell, row) => {
-        cloneArray[col][row] = cell;
-      });
+    return originalArray.map(arr => {
+      return arr.slice();
     });
-    return cloneArray;
   }
 
   start() {
