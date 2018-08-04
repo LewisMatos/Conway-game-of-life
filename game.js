@@ -1,5 +1,5 @@
 class GOF {
-  constructor(canvas, col = 900, row = 900, fps = 20, population = 100) {
+  constructor(canvas, col = 700, row = 700, fps = 20, population = 100) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.canvas.width = col;
@@ -9,6 +9,8 @@ class GOF {
     this.FPS = fps;
     this.POPULATION = population;
     this.CELLSIZE = col / population;
+    this.score = 0;
+    this.generation = 0;
     this.board = [];
     this.boardClone = [];
   }
@@ -39,6 +41,7 @@ class GOF {
     this.ctx.beginPath();
     this.ctx.fillStyle = fillStyle;
     this.ctx.rect(x, y, this.canvas.width, this.canvas.height);
+    this.ctx.strokeStyle = 'white';
     this.ctx.fill();
     this.ctx.stroke();
   }
@@ -50,11 +53,12 @@ class GOF {
     });
 
     //Create rand 0 || 1 in each cell
-    boardArray.map(array => {
-      return array.forEach((cell, index) => {
-        array[index] = Math.round(Math.random());
-      });
-    });
+
+    for (let col = 0; col < this.POPULATION; col++) {
+      for (let row = 0; row < this.POPULATION; row++) {
+        boardArray[col][row] = Math.round(Math.random());
+      }
+    }
     return boardArray;
   }
 
@@ -70,6 +74,7 @@ class GOF {
     // let boardClone = this.copyArray(this.board);
     let board = this.board;
     let neighbors = 0;
+    let score = 0;
 
     for (let col = 1; col < board.length - 1; col++) {
       for (let row = 1; row < board[col].length - 1; row++) {
@@ -86,6 +91,12 @@ class GOF {
         neighbors = 0;
       }
     }
+    this.generation++;
+
+    this.updateStats('generation_stat', this.generation);
+    this.updateStats('population_stat', this.score);
+
+    this.score = 0;
     let temp = this.board;
     this.board = this.boardClone;
     this.boardClone = temp;
@@ -97,10 +108,15 @@ class GOF {
     } else if (cellPos === 1 && neighbors > 3) {
       return 0;
     } else if (cellPos === 0 && neighbors == 3) {
+      this.score++;
       return 1;
     } else {
       return cellPos;
     }
+  }
+
+  updateStats(className, value) {
+    document.getElementsByClassName(className)[0].innerHTML = value;
   }
 
   copyArray(originalArray) {
